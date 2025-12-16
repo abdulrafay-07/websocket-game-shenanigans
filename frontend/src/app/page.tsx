@@ -1,97 +1,84 @@
-"use client";
+"use client"
 
-import { useRef } from "react";
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const socketRef = useRef<WebSocket | null>(null);
+  const [hasEnteredName, setHasEnteredName] = useState(false);
+  const [code, setCode] = useState("");
+  const [name, setName] = useState("");
+  const router = useRouter();
 
-  function connect() {
-    if (socketRef.current) return; // prevent double connect
-
-    const socket = new WebSocket("ws://localhost:3001/ws");
-    socketRef.current = socket;
-
-    socket.onopen = () => {
-      console.log("Connected to WebSocket");
-    };
-
-    socket.onmessage = (event) => {
-      console.log("Message from server:", event.data);
-    };
-
-    socket.onclose = () => {
-      console.log("WebSocket disconnected");
-      socketRef.current = null;
-    };
-
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-  }
-
-  function disconnect() {
-    socketRef.current?.close();
-  }
-
-  function createRoom() {
-    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      console.warn("WebSocket is not connected");
-      return;
-    }
-
-    const message = {
-      type: "create_room",
-      data: { player: { name: "ryu1", x: 0, y: 0 } }
-    };
-
-    socketRef.current.send(JSON.stringify(message));
-    console.log("Sent create room message:", message);
-  }
-
-  function joinRoom() {
-    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      console.warn("WebSocket is not connected");
-      return;
-    }
-
-    const message = {
-      type: "join_room",
-      data: { code: "A9F5QZ", player: { name: "ryu2", x: 0, y: 0 } }
-    };
-
-    socketRef.current.send(JSON.stringify(message));
-    console.log("Sent join room message:", message);
-  }
+  const handleNavigate = () => {
+    router.push(`/room/?name=${name}&room_code=${code}`);
+  };
 
   return (
-    <div className="p-4 space-y-4">
-      <button
-        onClick={connect}
-        className="px-4 py-2 bg-black text-white rounded"
-      >
-        Connect
-      </button>
+    <div className="flex flex-col items-center justify-center h-full">
+      <h1 className="text-4xl font-bold text-fuchsia-700 mb-6">
+        ryu multiplayer
+      </h1>
 
-      <button
-        onClick={disconnect}
-        className="px-4 py-2 bg-gray-200 rounded"
-      >
-        Disconnect
-      </button>
+      <div className="flex flex-col lg:flex-row items-center gap-4">
 
-      <button
-        onClick={createRoom}
-        className="px-4 py-2 bg-green-600 text-white rounded"
-      >
-        Create Room
-      </button>
+        {hasEnteredName ? (
+          <>
+            <Link href={`room?name=${name}`}>
+              <button className="h-10 px-4 py-1.5 rounded-xl bg-fuchsia-900 text-white cursor-pointer">
+                Create Room
+              </button>
+            </Link>
 
-      <button
-        onClick={joinRoom}
-        className="px-4 py-2 bg-blue-600 text-white rounded"
-      >
-        Join Room
-      </button>
+            <span className="font-semibold">or</span>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={code}
+                min={6}
+                max={6}
+                onChange={(e) => setCode(e.target.value.length <= 6 ? e.target.value : code)}
+                placeholder="Room Code"
+                className="h-10 pl-3 px-4 rounded-xl max-w-36 border-2 border-gray-200"
+              />
+              <button
+                onClick={handleNavigate}
+                disabled={code.length !== 6}
+                className="h-10 px-4 py-1.5 rounded-xl bg-fuchsia-900 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Join Room
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex gap-2 items-end">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="name">
+                Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Tyler Durden"
+                min={3}
+                max={15}
+                className="h-10 pl-3 px-4 rounded-xl border-2 border-gray-200"
+              />
+            </div>
+            <button
+              disabled={name.length < 3 || name.length > 15}
+              onClick={() => setHasEnteredName(true)}
+              className="h-10 px-4 py-1.5 rounded-xl bg-fuchsia-900 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Set Name
+            </button>
+          </div>
+        )}
+      </div>
     </div>
-  );
-}
+  )
+};

@@ -32,13 +32,13 @@ export function leaveRoom(code: string, player: Player) {
   const room = getRoomFromCode(code);
   if (!room) return;
 
-  const index = room.players.findIndex(p => p.name === player.name);
-  if (index === -1) return;
-
   if (room.players.length === 1) {
     destroyRoom(code);
     return room;
   };
+
+  const index = room.players.findIndex(p => p.name === player.name);
+  if (index === -1) return;
 
   room.players.splice(index, 1);
   return room;
