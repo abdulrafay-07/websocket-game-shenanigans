@@ -1,5 +1,5 @@
 import { generateCode } from "./utils";
-import type { Player, Room } from "./types";
+import type { PayloadMessageType, Player, Room } from "./types";
 
 export const rooms: Map<string, Room> = new Map();
 
@@ -20,28 +20,46 @@ export function createRoom(player: Player) {
   return rooms.get(roomCode)!;
 };
 
-export function joinRoom(code: string, player: Player) {
+export function joinRoom(code: string, player: Player): { room?: Room, type?: PayloadMessageType } {
   const room = getRoomFromCode(code);
-  if (!room) return;
+  if (!room) {
+    return {
+      type: "room_not_found"
+    };
+  };
 
   room.players.push(player);
-  return room;
+  return {
+    room
+  };
 };
 
-export function leaveRoom(code: string, player: Player) {
+export function leaveRoom(code: string, player: Player): { room?: Room, type?: PayloadMessageType } {
   const room = getRoomFromCode(code);
-  if (!room) return;
+  if (!room) {
+    return {
+      type: "room_not_found",
+    };
+  };
 
   if (room.players.length === 1) {
     destroyRoom(code);
-    return room;
+    return {
+      room
+    };
   };
 
   const index = room.players.findIndex(p => p.name === player.name);
-  if (index === -1) return;
+  if (index === -1) {
+    return {
+      type: "player_not_found",
+    };
+  };
 
   room.players.splice(index, 1);
-  return room;
+  return {
+    room
+  };
 };
 
 function destroyRoom(code: string) {
@@ -55,12 +73,18 @@ export function getPlayerFromRoomCode(code: string, playerToFind: Player) {
   return room?.players.find(p => p.name === playerToFind.name);
 };
 
-export function updatePlayerPosition(code: string, playerToUpdate: Player) {
+export function updatePlayerPosition(code: string, playerToUpdate: Player): { player?: Player, type?: PayloadMessageType } {
   const player = getPlayerFromRoomCode(code, playerToUpdate);
-  if (!player) return;
+  if (!player) {
+    return {
+      type: "player_not_found",
+    };
+  };
 
   player.x = playerToUpdate.x;
   player.y = playerToUpdate.y;
 
-  return player;
+  return {
+    player
+  };
 };

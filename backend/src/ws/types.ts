@@ -21,7 +21,7 @@ export type WebSocketMessage = {
   };
 };
 
-export type PayloadMessageType = "players_update" | "room_update" | "user_moved";
+export type PayloadMessageType = "players_update" | "room_update" | "user_moved" | "player_not_found" | "room_not_found";
 
 export type PayloadMessage = {
   type: PayloadMessageType;

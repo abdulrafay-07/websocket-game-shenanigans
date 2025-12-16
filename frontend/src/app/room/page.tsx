@@ -5,11 +5,13 @@ import { useEffect, useRef, useState } from "react";
 
 import { RoomState } from "@/components/room/room-state";
 
-import { Player, WebSocketMessage, Room, PayloadMessage } from "@/types";
+import { Player, WebSocketMessage, Room, PayloadMessage, PayloadMessageType, GameStates } from "@/types";
+import Link from "next/link";
 
 export default function RoomPage() {
   const [room, setRoom] = useState<Room | null>(null);
-  const [gameState, setGameState] = useState<"joining" | "creating" | "joined" | null>(null);
+  const [gameState, setGameState] = useState<GameStates | null>(null);
+  const [errorType, setErrorType] = useState<PayloadMessageType | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const playerRef = useRef<Player | null>(null);
   const searchParams = useSearchParams();
@@ -46,6 +48,11 @@ export default function RoomPage() {
 
       if (message.type === "room_update") {
         if (message.data.room) setRoom(message.data.room);
+      };
+
+      if (message.type === "room_not_found") {
+        setGameState("error");
+        setErrorType(message.type);
       };
     };
 
@@ -132,7 +139,7 @@ export default function RoomPage() {
     socket.send(JSON.stringify(message));
     socket.close();
 
-    router.replace("/");
+    router.replace(`/?name=${name}`);
   };
 
   useEffect(() => {
@@ -151,6 +158,18 @@ export default function RoomPage() {
     <div className="flex items-center justify-center h-full relative">
       {gameState === "joining" && <p>Joining room...</p>}
       {gameState === "creating" && <p>Creating room...</p>}
+      {gameState === "error" && (
+        <div className="flex flex-col items-center">
+          <h3 className="text-xl mb-4">
+            {errorType === "room_not_found" && "The room you are looking for does not exist..."}
+          </h3>
+          <Link href={`/?name=${name}`}>
+            <button className="h-10 px-4 py-1.5 rounded-xl bg-fuchsia-50 duration-100 transition-all hover:scale-105 text-fuchsia-800 hover:bg-fuchsia-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold">
+              Go Back Home
+            </button>
+          </Link>
+        </div>
+      )}
       {gameState === "joined" && (
         <div>
           <RoomState room={room} currentPlayer={playerRef.current} onRoomLeave={leaveRoom} />

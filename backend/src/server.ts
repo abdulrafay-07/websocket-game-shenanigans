@@ -30,8 +30,11 @@ export const app = new Elysia()
       if (message.type === "join_room") {
         if (!message.data.player || !message.data.code) return;
 
-        const room = joinRoom(message.data.code, message.data.player);
-        if (!room) return;
+        const { room, type } = joinRoom(message.data.code, message.data.player);
+        if (!room) {
+          ws.send(type);
+          return;
+        };
 
         // Subscribe to room events
         ws.subscribe(room.code);
@@ -49,8 +52,11 @@ export const app = new Elysia()
       if (message.type === "leave_room") {
         if (!message.data.player || !message.data.code) return;
 
-        const room = leaveRoom(message.data.code, message.data.player);
-        if (!room) return;
+        const { room, type } = leaveRoom(message.data.code, message.data.player);
+        if (!room) {
+          ws.send(type);
+          return;
+        };
 
         const payload: PayloadMessage = {
           type: "room_update",
@@ -68,8 +74,11 @@ export const app = new Elysia()
       if (message.type === "move_player") {
         if (!message.data.player || !message.data.code) return;
 
-        const player = updatePlayerPosition(message.data.code, message.data.player);
-        if (!player) return;
+        const { player, type } = updatePlayerPosition(message.data.code, message.data.player);
+        if (!player) {
+          ws.send(type);
+          return;
+        };
 
         // Broadcast position to users
         const payload: PayloadMessage = {

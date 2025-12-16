@@ -1,14 +1,24 @@
 "use client"
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Home() {
   const [hasEnteredName, setHasEnteredName] = useState(false);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const nameFromParams = searchParams.get("name");
+
+  useEffect(() => {
+    if (nameFromParams && nameFromParams.length > 3 && nameFromParams.length <= 15) {
+      setName(nameFromParams);
+      setHasEnteredName(true);
+    };
+  }, [nameFromParams]);
 
   const handleNavigate = () => {
     router.push(`/room/?name=${name}&room_code=${code}`);
