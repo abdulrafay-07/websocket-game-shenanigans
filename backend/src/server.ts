@@ -1,9 +1,10 @@
 import { Elysia } from "elysia";
 
-import type { WebSocketMessage } from "./ws/types";
-import { createRoom, destroyRoom, joinRoom, leaveRoom } from "./ws/room";
+import type { PayloadMessage, WebSocketMessage } from "./ws/types";
+import { createRoom, joinRoom, leaveRoom, updatePlayerPosition } from "./ws/room";
+import { broadcastMessage } from "./ws/utils";
 
-const app = new Elysia()
+export const app = new Elysia()
   .ws("/ws", {
     open(ws) {
       console.log(`Player connected: ${ws.id}`);
@@ -26,6 +27,15 @@ const app = new Elysia()
 
         // Subscribe to room events
         ws.subscribe(room.code);
+
+        const payload: PayloadMessage = {
+          type: "user_joined",
+          data: {
+            players: room.players,
+          },
+        };
+        // Notify the users in the room
+        broadcastMessage(ws, room.code, payload, true);
       };
 
       if (message.type === "leave_room") {
@@ -36,6 +46,31 @@ const app = new Elysia()
 
         // Unsubscribe from room events
         ws.unsubscribe(room.code);
+
+        const payload: PayloadMessage = {
+          type: "user_left",
+          data: {
+            players: room.players,
+          },
+        };
+        // Notify the other users in the room
+        broadcastMessage(ws, room.code, payload);
+      };
+
+      if (message.type === "move_player") {
+        if (!message.data.player || !message.data.code) return;
+
+        const player = updatePlayerPosition(message.data.code, message.data.player);
+        if (!player) return;
+
+        // Broadcast position to users
+        const payload: PayloadMessage = {
+          type: "user_moved",
+          data: {
+            player: player,
+          },
+        };
+        broadcastMessage(ws, message.data.code, payload, true);
       };
     },
     close(ws, code) {

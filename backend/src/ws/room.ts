@@ -1,7 +1,11 @@
 import { generateCode } from "./utils";
 import type { Player, Room } from "./types";
 
-const rooms: Map<string, Room> = new Map();
+export const rooms: Map<string, Room> = new Map();
+
+function getRoomFromCode(code: string) {
+  return rooms.get(code);
+};
 
 export function createRoom(player: Player) {
   const roomCode = generateCode();
@@ -17,30 +21,46 @@ export function createRoom(player: Player) {
 };
 
 export function joinRoom(code: string, player: Player) {
-  const existingRoom = rooms.get(code);
-  if (!existingRoom) return;
+  const room = getRoomFromCode(code);
+  if (!room) return;
 
-  existingRoom.players.push(player);
-  return existingRoom;
+  room.players.push(player);
+  return room;
 };
 
 export function leaveRoom(code: string, player: Player) {
-  const existingRoom = rooms.get(code);
-  if (!existingRoom) return;
+  const room = getRoomFromCode(code);
+  if (!room) return;
 
-  const index = existingRoom.players.findIndex(p => p.name === player.name);
+  const index = room.players.findIndex(p => p.name === player.name);
   if (index === -1) return;
 
-  if (existingRoom.players.length === 1) {
+  if (room.players.length === 1) {
     destroyRoom(code);
-    return existingRoom;
+    return room;
   };
 
-  existingRoom.players.splice(index, 1);
-  return existingRoom;
+  room.players.splice(index, 1);
+  return room;
 };
 
-export function destroyRoom(code: string) {
+function destroyRoom(code: string) {
   const deleted = rooms.delete(code);
   return deleted;
+};
+
+export function getPlayerFromRoomCode(code: string, playerToFind: Player) {
+  const room = getRoomFromCode(code);
+
+  return room?.players.find(p => p.name === playerToFind.name);
+};
+
+export function updatePlayerPosition(code: string, playerToUpdate: Player) {
+  const player = getPlayerFromRoomCode(code, playerToUpdate);
+  if (!player) return;
+
+  player.x = playerToUpdate.x;
+  player.y = playerToUpdate.y;
+
+  return player;
 };

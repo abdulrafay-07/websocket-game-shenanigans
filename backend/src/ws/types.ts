@@ -11,12 +11,22 @@ export type Room = {
   owner: Player;
 };
 
-export type WebSocketMessageType = "create_room" | "join_room" | "leave_room";
+export type WebSocketMessageType = "create_room" | "join_room" | "leave_room" | "move_player";
 
 export type WebSocketMessage = {
   type: WebSocketMessageType;
   data: {
     player?: Player;
     code?: string;
+  };
+};
+
+export type PayloadMessageType = "user_joined" | "user_left" | "user_moved";
+
+export type PayloadMessage = {
+  type: PayloadMessageType;
+  data: {
+    player?: Player;
+    players?: Player[];
   };
 };
