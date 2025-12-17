@@ -174,6 +174,10 @@ export default function RoomPage() {
       )}
       {gameState === "joined" && (
         <div>
+          <div className="absolute top-2 right-10">
+            {playerRef.current?.x}<br />
+            {playerRef.current?.y}
+          </div>
           <RoomState room={room} currentPlayer={playerRef.current} onRoomLeave={leaveRoom} />
           <Canvas room={room} currentPlayer={playerRef.current} socket={socketRef.current} code={room?.code!} />
         </div>

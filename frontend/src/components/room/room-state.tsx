@@ -24,7 +24,7 @@ export const RoomState = ({
   currentPlayer,
   onRoomLeave,
 }: RoomStateProps) => {
-  const [menuOpen, setMenuOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (!room) return null;
 
