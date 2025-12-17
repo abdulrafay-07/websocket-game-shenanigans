@@ -74,17 +74,17 @@ export const app = new Elysia()
       if (message.type === "move_player") {
         if (!message.data.player || !message.data.code) return;
 
-        const { player, type } = updatePlayerPosition(message.data.code, message.data.player);
-        if (!player) {
+        const { room, type } = updatePlayerPosition(message.data.code, message.data.player);
+        if (!room) {
           ws.send(type);
           return;
         };
 
         // Broadcast position to users
         const payload: PayloadMessage = {
-          type: "user_moved",
+          type: "room_update",
           data: {
-            player: player,
+            room: room,
           },
         };
         broadcastMessage(ws, message.data.code, payload, true);

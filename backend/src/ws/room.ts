@@ -67,14 +67,15 @@ function destroyRoom(code: string) {
   return deleted;
 };
 
-export function getPlayerFromRoomCode(code: string, playerToFind: Player) {
+export function updatePlayerPosition(code: string, playerToUpdate: Player): { room?: Room, type?: PayloadMessageType } {
   const room = getRoomFromCode(code);
+  if (!room) {
+    return {
+      type: "room_not_found",
+    };
+  };
 
-  return room?.players.find(p => p.name === playerToFind.name);
-};
-
-export function updatePlayerPosition(code: string, playerToUpdate: Player): { player?: Player, type?: PayloadMessageType } {
-  const player = getPlayerFromRoomCode(code, playerToUpdate);
+  const player = room.players.find(p => p.name === playerToUpdate.name);
   if (!player) {
     return {
       type: "player_not_found",
@@ -85,6 +86,6 @@ export function updatePlayerPosition(code: string, playerToUpdate: Player): { pl
   player.y = playerToUpdate.y;
 
   return {
-    player
+    room
   };
 };

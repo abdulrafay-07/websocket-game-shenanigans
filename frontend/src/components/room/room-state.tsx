@@ -1,3 +1,16 @@
+import { useState } from "react";
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { X, Menu, LogOut } from "lucide-react";
+
 import { Player, Room } from "@/types";
 
 interface RoomStateProps {
@@ -11,31 +24,97 @@ export const RoomState = ({
   currentPlayer,
   onRoomLeave,
 }: RoomStateProps) => {
-  return room && (
-    <div className="absolute top-4 left-4 border rounded-xl hover:shadow-md p-4 border-gray-200 duration-300 transition-all hover:scale-102">
-      <h3 className="text-xl mb-4 font-semibold">
-        Room Code: {room.code}
-      </h3>
+  const [menuOpen, setMenuOpen] = useState(true);
 
-      <h4 className="text-lg font-semibold">
-        Players joined:
-      </h4>
-      <div className="flex flex-col gap-0.5 pl-1 mb-6">
-        {room.players.map((player) => (
-          <p
-            key={player.name}
+  if (!room) return null;
+
+  if (menuOpen) {
+    return (
+      <Card className="absolute top-4 left-4 w-72 rounded-2xl shadow-lg bg-background/95 backdrop-blur border transition-all duration-200 hover:shadow-xl py-4 gap-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4">
+          <CardTitle className="text-base font-semibold">
+            Room
+          </CardTitle>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMenuOpen(false)}
           >
-            {player.name} {room.owner.name === player.name ? "(owner)" : player.name === currentPlayer?.name && "(you)"}
-          </p>
-        ))}
-      </div>
+            <X className="h-4 w-4" />
+          </Button>
+        </CardHeader>
 
-      <button
-        onClick={onRoomLeave}
-        className="h-10 px-4 py-1.5 rounded-xl bg-fuchsia-50 duration-100 transition-all hover:bg-fuchsia-100 text-fuchsia-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold"
+        <CardContent className="space-y-4 px-4">
+          {/* Room Code */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">
+              Room Code
+            </p>
+            <p className="font-mono text-lg font-semibold tracking-wider">
+              {room.code}
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* Players */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              Players ({room.players.length})
+            </p>
+
+            <div className="flex flex-col gap-1">
+              {room.players.map((player) => {
+                const isOwner = room.owner.name === player.name;
+                const isYou = player.name === currentPlayer?.name;
+
+                return (
+                  <div
+                    key={player.name}
+                    className="flex items-center justify-between text-sm px-2 py-1 rounded-md hover:bg-muted"
+                  >
+                    <span>{player.name}</span>
+
+                    <div className="flex gap-1">
+                      {isOwner && (
+                        <Badge variant="secondary">Owner</Badge>
+                      )}
+                      {isYou && (
+                        <Badge>You</Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Leave */}
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={onRoomLeave}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Leave Room
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  };
+
+  return (
+    <Card className="absolute top-4 left-4 rounded-xl shadow-md p-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setMenuOpen(true)}
       >
-        Leave Room
-      </button>
-    </div>
-  )
+        <Menu className="size-5" />
+      </Button>
+    </Card>
+  );
 };

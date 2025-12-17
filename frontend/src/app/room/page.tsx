@@ -3,10 +3,12 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { Canvas } from "@/components/room/canvas";
 import { RoomState } from "@/components/room/room-state";
 
 import { Player, WebSocketMessage, Room, PayloadMessage, PayloadMessageType, GameStates } from "@/types";
 import Link from "next/link";
+import { getRandomPosition } from "@/lib/ws-utils";
 
 export default function RoomPage() {
   const [room, setRoom] = useState<Room | null>(null);
@@ -148,8 +150,8 @@ export default function RoomPage() {
     // Initialize Player
     const player: Player = {
       name: name ?? "Anonymous",
-      x: 0,
-      y: 0,
+      x: getRandomPosition(window.innerWidth - 50),
+      y: getRandomPosition(window.innerHeight - 50),
     };
     playerRef.current = player;
   }, []);
@@ -173,6 +175,7 @@ export default function RoomPage() {
       {gameState === "joined" && (
         <div>
           <RoomState room={room} currentPlayer={playerRef.current} onRoomLeave={leaveRoom} />
+          <Canvas room={room} currentPlayer={playerRef.current} socket={socketRef.current} code={room?.code!} />
         </div>
       )}
     </div>
