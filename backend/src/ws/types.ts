@@ -2,9 +2,16 @@ export type Player = {
   name: string;
   x: number;
   y: number;
-  character: string;
-  strideSize: number;
-  facingDirection: number;
+  character: Character;
+};
+
+export type Character = {
+  name: string;
+  image: string;
+  xStride: number;
+  yStride: number;
+  facingDirections: number[];
+  currentDirection: number;
   currentFrame: number;
   isMoving: boolean;
 };

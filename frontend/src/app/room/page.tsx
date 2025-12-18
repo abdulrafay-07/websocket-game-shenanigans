@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Canvas } from "@/components/room/canvas";
 import { RoomState } from "@/components/room/room-state";
 
+import { characters } from "@/constants";
 import { getRandomPosition } from "@/lib/ws-utils";
 import { Player, WebSocketMessage, Room, PayloadMessage, PayloadMessageType, GameStates } from "@/types";
 
@@ -21,6 +22,7 @@ export default function RoomPage() {
 
   const name = searchParams.get("name");
   const roomCode = searchParams.get("room_code");
+  const characterName = searchParams.get("character");
 
   function connect() {
     if (socketRef.current) return;
@@ -150,13 +152,9 @@ export default function RoomPage() {
     // Initialize Player
     const player: Player = {
       name: name ?? "Anonymous",
-      x: getRandomPosition(window.innerWidth),
-      y: getRandomPosition(window.innerHeight),
-      character: "/john.png",
-      strideSize: 256,
-      facingDirection: 0,
-      currentFrame: 0,
-      isMoving: false,
+      x: getRandomPosition(window.innerWidth - 128 - (window.innerWidth % 32)),
+      y: getRandomPosition(window.innerHeight - 128 - (window.innerHeight % 32)),
+      character: characters.find(c => c.name === characterName) ?? characters[0],
     };
     playerRef.current = player;
   }, []);

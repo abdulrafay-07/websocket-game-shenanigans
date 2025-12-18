@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -13,10 +14,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+import { characters } from "@/constants";
+import { cn } from "@/lib/utils";
+
 export default function Home() {
+  const [inputState, setInputState] = useState<"name" | "character" | "code">("name");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
-  const [hasEnteredName, setHasEnteredName] = useState(false);
+  const [character, setCharacter] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,12 +30,12 @@ export default function Home() {
   useEffect(() => {
     if (nameFromParams && nameFromParams.length > 3 && nameFromParams.length <= 15) {
       setName(nameFromParams);
-      setHasEnteredName(true);
+      setInputState("character");
     };
   }, [nameFromParams]);
 
   const handleNavigate = () => {
-    router.push(`/room/?name=${name}&room_code=${code}`);
+    router.push(`/room/?name=${name}&character=${character}&room_code=${code}`);
   };
 
   return (
@@ -46,10 +51,86 @@ export default function Home() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {hasEnteredName ? (
+          {inputState === "name" && (
+            <>
+              {/* Name Step */}
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Name (3–15 characters)
+                </p>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                />
+              </div>
+
+              <Button
+                className="w-full"
+                disabled={name.length < 3 || name.length > 15}
+                onClick={() => setInputState("character")}
+              >
+                Continue
+              </Button>
+            </>
+          )}
+          {inputState === "character" && (
+            <>
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium">Choose your character</p>
+                <p className="text-xs text-muted-foreground">This cannot be changed in-game</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {characters.map((c) => (
+                  <button
+                    key={c.name}
+                    onClick={() => setCharacter(c.name)}
+                    className={cn(
+                      "relative rounded-xl border p-3 transition-all",
+                      "hover:border-primary hover:shadow-sm",
+                      character === c.name
+                      ? "border-primary ring-2 ring-primary/30"
+                      : "border-border"
+                    )}
+                  >
+                    <div className="aspect-square relative mb-2">
+                      <Image
+                        src={c.image}
+                        alt={c.name}
+                        fill
+                        className="object-contain"
+                        priority
+                      />
+                    </div>
+                    <p className="text-sm font-medium text-center">{c.name}</p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setInputState("name")}
+                >
+                  Back
+                </Button>
+                <Button
+                  disabled={!character}
+                  onClick={() => setInputState("code")}
+                >
+                  Continue
+                </Button>
+              </div>
+            </>
+          )}
+          {inputState === "code" && (
             <>
               {/* Create Room */}
-              <Link href={`/room?name=${name}`}>
+              <Link href={`/room?name=${name}&character=${character}`}>
                 <Button className="w-full">
                   Create Room
                 </Button>
@@ -80,31 +161,6 @@ export default function Home() {
                   Join Room
                 </Button>
               </div>
-            </>
-          ) : (
-            <>
-              {/* Name Step */}
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  Name (3–15 characters)
-                </p>
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                />
-              </div>
-
-              <Button
-                className="w-full"
-                disabled={name.length < 3 || name.length > 15}
-                onClick={() => setHasEnteredName(true)}
-              >
-                Continue
-              </Button>
             </>
           )}
         </CardContent>

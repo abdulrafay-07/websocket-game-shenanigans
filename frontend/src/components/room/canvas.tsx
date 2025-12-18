@@ -19,6 +19,7 @@ export const Canvas = ({
 }: CanvasProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const imagesRef = useRef<Record<string, HTMLImageElement>>({});
+  const tileImageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   function drawPlayers(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
@@ -27,16 +28,36 @@ export const Canvas = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.imageSmoothingEnabled = false;
 
-    room?.players.forEach((player, index) => {
-      const img = imagesRef.current[player.character];
+    // Draw tiles
+    const totalCols = canvas.width / 32;
+    const totalRows = canvas.height / 32;
+
+    console.log("outside")
+    if (tileImageRef.current) {
+      console.log("inside")
+      for (let i = 0; i < totalCols; i++) {
+        for (let j = 0; j < totalRows; j++) {
+          ctx.drawImage(
+            tileImageRef.current,
+            i * 32,
+            j * 32,
+            TILE_SIZE,
+            TILE_SIZE,
+          );
+        };
+      };
+    };
+
+    room?.players.forEach((player) => {
+      const img = imagesRef.current[player.character.image];
       if (!img) return;
 
       ctx.drawImage(
         img,
-        player.currentFrame * player.strideSize,
-        player.facingDirection * player.strideSize,
-        player.strideSize,
-        player.strideSize,
+        player.character.currentFrame * player.character.xStride,
+        player.character.currentDirection * player.character.yStride,
+        player.character.xStride,
+        player.character.yStride,
         player.x,
         player.y,
         TILE_SIZE * 3,
@@ -72,13 +93,13 @@ export const Canvas = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    currentPlayer.isMoving = true;
+    currentPlayer.character.isMoving = true;
 
     if (e.key === "ArrowRight" && currentPlayer) {
       if (currentPlayer.x >= canvas.width - (TILE_SIZE * 3)) return;
 
       currentPlayer.x += 32;
-      currentPlayer.facingDirection = 2;
+      currentPlayer.character.currentDirection = currentPlayer.character.facingDirections[0];
       sendMoveToSocket(currentPlayer);
     };
 
@@ -86,7 +107,7 @@ export const Canvas = ({
       if (currentPlayer.x <= 0) return;
 
       currentPlayer.x -= 32;
-      currentPlayer.facingDirection = 3;
+      currentPlayer.character.currentDirection = currentPlayer.character.facingDirections[1];
       sendMoveToSocket(currentPlayer);
     };
 
@@ -94,7 +115,7 @@ export const Canvas = ({
       if (currentPlayer.y <= 0) return;
 
       currentPlayer.y -= 32;
-      currentPlayer.facingDirection = 1;
+      currentPlayer.character.currentDirection = currentPlayer.character.facingDirections[2];
       sendMoveToSocket(currentPlayer);
     };
 
@@ -102,7 +123,7 @@ export const Canvas = ({
       if (currentPlayer.y >= canvas.height - (TILE_SIZE * 3)) return;
 
       currentPlayer.y += 32;
-      currentPlayer.facingDirection = 0;
+      currentPlayer.character.currentDirection = currentPlayer.character.facingDirections[3];
       sendMoveToSocket(currentPlayer);
     };
   };
@@ -110,27 +131,35 @@ export const Canvas = ({
   function handleKeyUp() {
     if (!currentPlayer) return;
 
-    currentPlayer.isMoving = false;
+    currentPlayer.character.isMoving = false;
   };
 
-  async function loadImages() {
-    if (!room) return;
+  async function loadAssets(characters: boolean, tile: boolean) {
     setIsLoaded(false);
 
-    const loadPromises = room.players.map((player) => {
-      if (imagesRef.current[player.character]) return Promise.resolve();
+    if (characters && room) {
+      const loadPromises = room.players.map((player) => {
+        if (imagesRef.current[player.character.image]) return Promise.resolve();
 
-      return new Promise<void>((resolve) => {
-        const img = new Image();
-        img.src = player.character;
-        img.onload = () => {
-          imagesRef.current[player.character] = img;
-          resolve();
-        };
+        return new Promise<void>((resolve) => {
+          const img = new Image();
+          img.src = player.character.image;
+          img.onload = () => {
+            imagesRef.current[player.character.image] = img;
+            resolve();
+          };
+        });
       });
-    });
 
-    await Promise.all(loadPromises);
+      await Promise.all(loadPromises);
+    };
+
+    if (tile) {
+      const tileImg = new Image();
+      tileImg.src = "/tile.png";
+      tileImg.onload = () => tileImageRef.current = tileImg;
+    };
+
     setIsLoaded(true);
   };
 
@@ -138,8 +167,10 @@ export const Canvas = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth - 128 - (window.innerWidth % 32);
+    canvas.height = window.innerHeight - 128 - (window.innerHeight % 32);
+
+    loadAssets(false, true);
   }, []);
 
   useEffect(() => {
@@ -155,7 +186,7 @@ export const Canvas = ({
   }, [isLoaded, room]);
 
   useEffect(() => {
-    loadImages();
+    loadAssets(true, false);
   }, [isLoaded, room?.players.length]);
 
   return (
@@ -164,6 +195,7 @@ export const Canvas = ({
       ref={canvasRef}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
+      className="flex items-center justify-center border"
     ></canvas>
   )
 };
