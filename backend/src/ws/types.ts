@@ -2,6 +2,11 @@ export type Player = {
   name: string;
   x: number;
   y: number;
+  character: string;
+  strideSize: number;
+  facingDirection: number;
+  currentFrame: number;
+  isMoving: boolean;
 };
 
 export type Room = {

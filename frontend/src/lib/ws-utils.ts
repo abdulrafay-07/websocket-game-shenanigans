@@ -1,3 +1,5 @@
 export function getRandomPosition(maxVal: number) {
-  return Math.floor(Math.random() * maxVal);
+  const random = Math.floor(Math.random() * maxVal);
+
+  return random - (random % 32);
 };

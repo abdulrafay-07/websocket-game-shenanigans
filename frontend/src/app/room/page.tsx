@@ -1,14 +1,14 @@
 "use client"
 
-import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Canvas } from "@/components/room/canvas";
 import { RoomState } from "@/components/room/room-state";
 
-import { Player, WebSocketMessage, Room, PayloadMessage, PayloadMessageType, GameStates } from "@/types";
-import Link from "next/link";
 import { getRandomPosition } from "@/lib/ws-utils";
+import { Player, WebSocketMessage, Room, PayloadMessage, PayloadMessageType, GameStates } from "@/types";
 
 export default function RoomPage() {
   const [room, setRoom] = useState<Room | null>(null);
@@ -150,8 +150,13 @@ export default function RoomPage() {
     // Initialize Player
     const player: Player = {
       name: name ?? "Anonymous",
-      x: getRandomPosition(window.innerWidth - 50),
-      y: getRandomPosition(window.innerHeight - 50),
+      x: getRandomPosition(window.innerWidth),
+      y: getRandomPosition(window.innerHeight),
+      character: "/john.png",
+      strideSize: 256,
+      facingDirection: 0,
+      currentFrame: 0,
+      isMoving: false,
     };
     playerRef.current = player;
   }, []);

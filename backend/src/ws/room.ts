@@ -84,6 +84,7 @@ export function updatePlayerPosition(code: string, playerToUpdate: Player): { ro
 
   player.x = playerToUpdate.x;
   player.y = playerToUpdate.y;
+  player.facingDirection = playerToUpdate.facingDirection;
 
   return {
     room
